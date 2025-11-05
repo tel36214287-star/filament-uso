@@ -1,38 +1,65 @@
-<script src="filament.js"></script>
-<script>
-  Filament.init(['filament.wasm'], () => {
-    const canvas = document.getElementById('canvas');
-    const engine = Filament.Engine.create(canvas);
-    const scene = engine.createScene();
-
-    // Luz
-    const light = Filament.EntityManager.get().create();
-    Filament.LightManager.Builder(Filament.LightManager$Type.SUN)
-      .color([1.0, 1.0, 0.9])
-      .intensity(100000)
-      .direction([0.5, -1, -0.3])
-      .build(engine, light);
-    scene.addEntity(light);
-
-    // Câmera
-    const camEntity = Filament.EntityManager.get().create();
-    const cam = engine.createCamera(camEntity);
-    cam.lookAt([0, 0, 4], [0, 0, 0]);
-
-    // View
-    const view = engine.createView();
-    const swapChain = engine.createSwapChain();
-    view.setCamera(cam);
-    view.setScene(scene);
-
-    // Loop de renderização
-    function render() {
-      engine.beginFrame(swapChain);
-      engine.render(view);
-      engine.endFrame();
-      requestAnimationFrame(render);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Filament Demo</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      background-color: #333; /* fundo escuro pra ver se a tela não fica branca */
     }
-    render();
-  });
-</script>
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="filament-canvas"></canvas>
+
+  <script type="module">
+    import * as Filament from './filament.js'; // ajuste o caminho para o filament.js real
+
+    async function initFilament() {
+      try {
+        const canvas = document.getElementById('filament-canvas');
+
+        if (!canvas) {
+          console.error("Canvas não encontrado!");
+          return;
+        }
+
+        // Inicializa engine
+        const engine = await Filament.Engine.create();
+        const scene = engine.createScene();
+        const view = engine.createView();
+        view.setScene(scene);
+
+        const renderer = engine.createRenderer();
+        const swapChain = engine.createSwapChain(canvas);
+
+        function renderLoop() {
+          if (!renderer.beginFrame(swapChain)) return;
+          renderer.render(view);
+          renderer.endFrame();
+          requestAnimationFrame(renderLoop);
+        }
+
+        renderLoop();
+
+        console.log("Filament iniciado com sucesso!");
+      } catch (e) {
+        console.error("Erro ao inicializar Filament:", e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initFilament);
+  </script>
+</body>
+</html></script>
 <canvas id="canvas" width="800" height="600"></canvas>
