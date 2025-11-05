@@ -1,102 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Filament Cube Demo</title>
-  <script src="filament.js"></script>
-  <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; }
-    canvas { width: 100%; height: 100%; display: block; }
-  </style>
-</head>
-<body>
-  <canvas id="canvas"></canvas>
+<script src="filament.js"></script>
+<script>
+  Filament.init(['filament.wasm'], () => {
+    const canvas = document.getElementById('canvas');
+    const engine = Filament.Engine.create(canvas);
+    const scene = engine.createScene();
 
-  <script>
-    Filament.init().then(() => {
-      const canvas = document.getElementById('canvas');
-      const engine = Filament.Engine.create(canvas);
-      const scene = engine.createScene();
-      const em = Filament.EntityManager.get();
+    // Luz
+    const light = Filament.EntityManager.get().create();
+    Filament.LightManager.Builder(Filament.LightManager$Type.SUN)
+      .color([1.0, 1.0, 0.9])
+      .intensity(100000)
+      .direction([0.5, -1, -0.3])
+      .build(engine, light);
+    scene.addEntity(light);
 
-      // Câmera
-      const camEnt = em.create();
-      const camera = engine.createCamera(camEnt);
-      camera.lookAt([0, 0, 3], [0, 0, 0]);
-      
-      // View
-      const view = engine.createView();
-      view.setCamera(camera);
-      view.setScene(scene);
+    // Câmera
+    const camEntity = Filament.EntityManager.get().create();
+    const cam = engine.createCamera(camEntity);
+    cam.lookAt([0, 0, 4], [0, 0, 0]);
 
-      // Luz direcional
-      const sun = em.create();
-      Filament.LightManager.Builder(Filament.LightManager$Type.SUN)
-        .color([1.0, 1.0, 0.9])
-        .intensity(50000)
-        .direction([0.5, -1, -0.3])
-        .castShadows(true)
-        .build(engine, sun);
-      scene.addEntity(sun);
+    // View
+    const view = engine.createView();
+    const swapChain = engine.createSwapChain();
+    view.setCamera(cam);
+    view.setScene(scene);
 
-      // Material básico embutido
-      const mat = Filament.Material.Builder()
-        .name("default")
-        .shading(Filament.Shading.LIT)
-        .build(engine);
-      const matInst = mat.createInstance();
-
-      // Cubo simples (vertices + índices)
-      const vertexBuffer = Filament.VertexBuffer.Builder()
-        .vertexCount(8)
-        .bufferCount(1)
-        .attribute(Filament.VertexAttribute.POSITION, 0, Filament.AttributeType.FLOAT3)
-        .build(engine);
-
-      const positions = new Float32Array([
-        -1, -1, -1,   1, -1, -1,
-         1,  1, -1,  -1,  1, -1,
-        -1, -1,  1,   1, -1,  1,
-         1,  1,  1,  -1,  1,  1
-      ]);
-      vertexBuffer.setBufferAt(engine, 0, positions);
-
-      const indexBuffer = Filament.IndexBuffer.Builder()
-        .indexCount(36)
-        .bufferType(Filament.IndexBuffer$IndexType.USHORT)
-        .build(engine);
-
-      const indices = new Uint16Array([
-        0,1,2, 2,3,0,
-        4,5,6, 6,7,4,
-        0,1,5, 5,4,0,
-        2,3,7, 7,6,2,
-        0,3,7, 7,4,0,
-        1,2,6, 6,5,1
-      ]);
-      indexBuffer.setBuffer(engine, indices);
-
-      // Entity renderável
-      const cube = em.create();
-      Filament.RenderableManager.Builder(1)
-        .boundingBox([[-1,-1,-1],[1,1,1]])
-        .geometry(0, Filament.RenderableManager$PrimitiveType.TRIANGLES,
-                  vertexBuffer, indexBuffer)
-        .material(0, matInst)
-        .build(engine, cube);
-      scene.addEntity(cube);
-
-      const swapChain = engine.createSwapChain();
-
-      // Loop de render
-      function render() {
-        engine.beginFrame(swapChain);
-        engine.render(view);
-        engine.endFrame();
-        requestAnimationFrame(render);
-      }
-      render();
-    });
-  </script>
-</body>
-</html>
+    // Loop de renderização
+    function render() {
+      engine.beginFrame(swapChain);
+      engine.render(view);
+      engine.endFrame();
+      requestAnimationFrame(render);
+    }
+    render();
+  });
+</script>
+<canvas id="canvas" width="800" height="600"></canvas>
