@@ -1,16 +1,26 @@
-// fil-app.js
-import * as Filament from './filament.js'; // caminho para o seu filament.js
+import * as Filament from './filament.js';
+
+// Função de criação de entidade box (exemplo, adapte à sua API real Filament.js)
+function createBoxEntity(engine) {
+    // Aqui você deve criar um mesh com material/primitives conforme sua biblioteca.
+    // Exemplo imaginário de criação de Box:
+    // const entity = Filament.EntityManager.create();
+    // Adicione componentes necessários ao entity (Transform, Renderable, etc)
+    // Retorne entity;
+    // Substitua pelo processo real do seu filamento.js
+    return null; // Substitua por sua implementação
+}
 
 async function initFilament() {
     try {
-        // Cria canvas
+        // Busca canvas
         const canvas = document.getElementById('filament-canvas');
         if (!canvas) {
             console.error("Canvas não encontrado!");
             return;
         }
 
-        // Inicializa Filament
+        // Inicializa engine e principais componentes
         const engine = await Filament.Engine.create();
         const scene = engine.createScene();
         const view = engine.createView();
@@ -19,22 +29,48 @@ async function initFilament() {
         const renderer = engine.createRenderer();
         const swapChain = engine.createSwapChain(canvas);
 
-        // Loop de render
+        // Cria entidade box e adiciona à cena
+        const boxEntity = createBoxEntity(engine);
+        if (boxEntity) {
+            scene.addEntity(boxEntity);
+        } else {
+            console.error("Falha ao criar boxEntity. Verifique sua função createBoxEntity().");
+        }
+
+        // Loop de renderização com rotação do box
+        let angle = 0;
         function renderLoop() {
-            if (!renderer.beginFrame(swapChain)) return;
-            renderer.render(view);
-            renderer.endFrame();
+            if (boxEntity) {
+                angle += 0.01;
+
+                const tm = engine.getTransformManager();
+                const inst = tm.getInstance(boxEntity);
+
+                // Aplica rotação ao box
+                tm.setTransform(
+                    inst,
+                    Filament.mat4f.transpose(
+                        Filament.mat4f.rotation(angle, [0, 1, 0])
+                    )
+                );
+                tm.commit();
+            }
+
+            if (renderer.beginFrame(swapChain)) {
+                renderer.render(view);
+                renderer.endFrame();
+            }
             requestAnimationFrame(renderLoop);
         }
 
         renderLoop();
-
         console.log("Filament iniciado com sucesso!");
     } catch (e) {
         console.error("Erro ao inicializar Filament:", e);
     }
 }
 
+window.addEventListener('DOMContentLoaded', initFilament);
 // Espera o DOM carregar
 window.addEventListener('DOMContentLoaded', initFilament);  scene.addEntity(boxEntity);
 
