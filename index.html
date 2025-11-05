@@ -20,9 +20,11 @@
   </style>
 </head>
 <body>
+  <!-- Canvas ÚNICO, id correto -->
   <canvas id="filament-canvas"></canvas>
 
   <script type="module">
+    // ATENÇÃO: Use um servidor local (ex.: Live Server do VSCode, ou http-server) para ES Modules!
     import * as Filament from './filament.js'; // ajuste o caminho para o filament.js real
 
     async function initFilament() {
@@ -61,5 +63,4 @@
     window.addEventListener('DOMContentLoaded', initFilament);
   </script>
 </body>
-</html></script>
-<canvas id="canvas" width="800" height="600"></canvas>
+</html>
