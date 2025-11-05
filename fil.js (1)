@@ -1,40 +1,42 @@
-Filament.init().then(() => {
-  const canvas = document.getElementById('canvas');
-  const engine = Filament.Engine.create(canvas);
-  const scene = engine.createScene();
+// fil-app.js
+import * as Filament from './filament.js'; // caminho para o seu filament.js
 
-  // Luz solar
-  const light = Filament.EntityManager.get().create();
-  Filament.LightManager.Builder(Filament.LightManager$Type.SUN)
-    .color([1.0, 0.95, 0.9])
-    .intensity(100000.0)
-    .direction([0.5, -1, -0.3])
-    .build(engine, light);
-  scene.addEntity(light);
+async function initFilament() {
+    try {
+        // Cria canvas
+        const canvas = document.getElementById('filament-canvas');
+        if (!canvas) {
+            console.error("Canvas não encontrado!");
+            return;
+        }
 
-  // Câmera
-  const cameraEntity = Filament.EntityManager.get().create();
-  const camera = engine.createCamera(cameraEntity);
-  camera.lookAt([0, 0, 4], [0, 0, 0]);
+        // Inicializa Filament
+        const engine = await Filament.Engine.create();
+        const scene = engine.createScene();
+        const view = engine.createView();
+        view.setScene(scene);
 
-  // View
-  const view = engine.createView();
-  const swapChain = engine.createSwapChain();
-  view.setCamera(camera);
-  view.setScene(scene);
+        const renderer = engine.createRenderer();
+        const swapChain = engine.createSwapChain(canvas);
 
-  // Cubo simples
-  const boxEntity = Filament.EntityManager.get().create();
-  const transformManager = engine.getTransformManager();
-  const tInstance = transformManager.create(boxEntity);
-  transformManager.setTransform(tInstance, Filament.mat4f.transpose(Filament.mat4f.scaling([1, 1, 1])));
-  transformManager.commit();
-  transformManager.destroy(tInstance);
+        // Loop de render
+        function renderLoop() {
+            if (!renderer.beginFrame(swapChain)) return;
+            renderer.render(view);
+            renderer.endFrame();
+            requestAnimationFrame(renderLoop);
+        }
 
-  const renderable = Filament.RenderableManager.Builder(1)
-    .geometry(0, Filament.RenderableManager$PrimitiveType.TRIANGLES, Filament.Box(), 0, 36)
-    .build(engine, boxEntity);
-  scene.addEntity(boxEntity);
+        renderLoop();
+
+        console.log("Filament iniciado com sucesso!");
+    } catch (e) {
+        console.error("Erro ao inicializar Filament:", e);
+    }
+}
+
+// Espera o DOM carregar
+window.addEventListener('DOMContentLoaded', initFilament);  scene.addEntity(boxEntity);
 
   // Loop de renderização com rotação
   let angle = 0;
