@@ -1,0 +1,56 @@
+Filament.init().then(() => {
+  const canvas = document.getElementById('canvas');
+  const engine = Filament.Engine.create(canvas);
+  const scene = engine.createScene();
+
+  // Luz solar
+  const light = Filament.EntityManager.get().create();
+  Filament.LightManager.Builder(Filament.LightManager$Type.SUN)
+    .color([1.0, 0.95, 0.9])
+    .intensity(100000.0)
+    .direction([0.5, -1, -0.3])
+    .build(engine, light);
+  scene.addEntity(light);
+
+  // Câmera
+  const cameraEntity = Filament.EntityManager.get().create();
+  const camera = engine.createCamera(cameraEntity);
+  camera.lookAt([0, 0, 4], [0, 0, 0]);
+
+  // View
+  const view = engine.createView();
+  const swapChain = engine.createSwapChain();
+  view.setCamera(camera);
+  view.setScene(scene);
+
+  // Cubo simples
+  const boxEntity = Filament.EntityManager.get().create();
+  const transformManager = engine.getTransformManager();
+  const tInstance = transformManager.create(boxEntity);
+  transformManager.setTransform(tInstance, Filament.mat4f.transpose(Filament.mat4f.scaling([1, 1, 1])));
+  transformManager.commit();
+  transformManager.destroy(tInstance);
+
+  const renderable = Filament.RenderableManager.Builder(1)
+    .geometry(0, Filament.RenderableManager$PrimitiveType.TRIANGLES, Filament.Box(), 0, 36)
+    .build(engine, boxEntity);
+  scene.addEntity(boxEntity);
+
+  // Loop de renderização com rotação
+  let angle = 0;
+  function render() {
+    angle += 0.01;
+    const tm = engine.getTransformManager();
+    const inst = tm.getInstance(boxEntity);
+    tm.setTransform(inst, Filament.mat4f.transpose(Filament.mat4f.rotation(angle, [0, 1, 0])));
+    tm.commit();
+    tm.destroy(inst);
+
+    engine.beginFrame(swapChain);
+    engine.render(view);
+    engine.endFrame();
+
+    requestAnimationFrame(render);
+  }
+  render();
+});
